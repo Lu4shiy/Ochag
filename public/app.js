@@ -48,11 +48,35 @@ const profileModal = document.getElementById('profile-modal');
 const closeProfileModalBtn = document.getElementById('close-profile-modal-btn');
 const profileForm = document.getElementById('profile-form');
 const profileUsernameInput = document.getElementById('profile-username-input');
-const profileBirthdateInput = document.getElementById('profile-birthdate-input');
 const profilePreviewAvatar = document.getElementById('profile-preview-avatar');
 const customAvatarInput = document.getElementById('custom-avatar-input');
 const presetItems = document.querySelectorAll('.preset-item');
 const profileError = document.getElementById('profile-error');
+
+// Селекторы даты рождения
+const dobDaySelect = document.getElementById('dob-day');
+const dobMonthSelect = document.getElementById('dob-month');
+const dobYearSelect = document.getElementById('dob-year');
+
+// Инициализация выпадающих списков даты рождения
+function initDobSelectors() {
+    // Заполняем дни (1-31)
+    for (let i = 1; i <= 31; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = i;
+        dobDaySelect.appendChild(opt);
+    }
+    // Заполняем годы (от текущего до 100 лет назад)
+    const currentYear = new Date().getFullYear();
+    for (let i = currentYear; i >= currentYear - 100; i--) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = i;
+        dobYearSelect.appendChild(opt);
+    }
+}
+initDobSelectors();
 
 // Модалка просмотра чужого профиля
 const userInfoModal = document.getElementById('user-info-modal');
@@ -67,7 +91,6 @@ const toastText = document.getElementById('toast-text');
 
 let editingAvatarValue = null;
 
-// Проверка сессии
 window.addEventListener('DOMContentLoaded', () => {
     const savedUser = localStorage.getItem('messenger_user');
     if (savedUser) {
@@ -116,7 +139,6 @@ async function authenticate(url) {
     }
 }
 
-// Активность
 setInterval(() => {
     if (currentUser) {
         fetch('/api/activity', {
@@ -136,13 +158,29 @@ document.addEventListener('click', () => {
     userDropdown.classList.add('hidden');
 });
 
-// Открытие модалки профиля
 menuProfile.addEventListener('click', () => {
     userDropdown.classList.add('hidden');
     profileError.style.display = 'none';
     profileUsernameInput.value = currentUser.username;
-    profileBirthdateInput.value = currentUser.birthdate || '';
     editingAvatarValue = currentUser.avatar || null;
+
+    // Парсим сохраненную дату рождения обратно в селекторы (формат: "25 октября 1995" или "25 октября")
+    dobDaySelect.value = '';
+    dobMonthSelect.value = '';
+    dobYearSelect.value = '';
+
+    if (currentUser.birthdate) {
+        const parts = currentUser.birthdate.split(' ');
+        if (parts.length >= 2) {
+            dobDaySelect.value = parts[0];
+            const monthsMap = { 'Январь': '1', 'Февраль': '2', 'Март': '3', 'Апрель': '4', 'Май': '5', 'Июнь': '6', 'Июль': '7', 'Август': '8', 'Сентябрь': '9', 'Октябрь': '10', 'Ноябрь': '11', 'Декабрь': '12' };
+            dobMonthSelect.value = monthsMap[parts[1]] || '';
+            if (parts.length === 3) {
+                dobYearSelect.value = parts[2];
+            }
+        }
+    }
+
     renderProfilePreview();
     profileModal.classList.remove('hidden');
 });
@@ -151,7 +189,6 @@ closeProfileModalBtn.addEventListener('click', () => {
     profileModal.classList.add('hidden');
 });
 
-// Выбор пресета аватара
 presetItems.forEach(item => {
     item.addEventListener('click', () => {
         presetItems.forEach(i => i.classList.remove('selected'));
@@ -161,13 +198,12 @@ presetItems.forEach(item => {
     });
 });
 
-// Загрузка кастомной аватароки
 customAvatarInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(uploadEvent) {
-        editingAvatarValue = uploadEvent.target.result; // base64
+        editingAvatarValue = uploadEvent.target.result;
         presetItems.forEach(i => i.classList.remove('selected'));
         renderProfilePreview();
     };
@@ -187,13 +223,26 @@ function renderProfilePreview() {
     }
 }
 
-// Сохранение профиля
 profileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     profileError.style.display = 'none';
 
     const newUsername = profileUsernameInput.value.trim();
-    const newBirthdate = profileBirthdateInput.value.trim();
+    
+    // Собираем дату рождения из селекторов
+    let formattedBirthdate = '';
+    const day = dobDaySelect.value;
+    const monthVal = dobMonthSelect.value;
+    const year = dobYearSelect.value;
+
+    if (day && monthVal) {
+        const monthsArr = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        const monthName = monthsArr[parseInt(monthVal)];
+        formattedBirthdate = `${day} ${monthName}`;
+        if (year) {
+            formattedBirthdate += ` ${year}`;
+        }
+    }
 
     try {
         const response = await fetch('/api/profile', {
@@ -203,7 +252,7 @@ profileForm.addEventListener('submit', async (e) => {
                 currentUsername: currentUser.username,
                 username: newUsername,
                 avatar: editingAvatarValue,
-                birthdate: newBirthdate
+                birthdate: formattedBirthdate
             })
         });
         const data = await response.json();
@@ -436,7 +485,6 @@ function updateChatHeader() {
     }
 }
 
-// Клик по шапке личного чата для просмотра профиля собеседника
 activeChatHeaderInfo.onclick = async () => {
     const chat = allChats.find(c => c.id === currentChatId);
     if (!chat || chat.type !== 'dm') return;

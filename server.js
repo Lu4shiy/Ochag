@@ -32,7 +32,7 @@ function saveDB(data) {
 }
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json({ limit: '5mb' })); // Увеличиваем лимит для загрузки аватарок в base64
+app.use(express.json({ limit: '5mb' }));
 
 // Регистрация
 app.post('/api/register', (req, res) => {
@@ -93,7 +93,6 @@ app.post('/api/profile', (req, res) => {
             return res.status(400).json({ success: false, error: 'Это имя уже занято' });
         }
         user.username = username;
-        // Обновляем имя в личных чатах и сообщениях
         db.chats.forEach(c => {
             if (c.type === 'dm' && c.participants) {
                 const idx = c.participants.indexOf(currentUsername);
@@ -122,7 +121,7 @@ app.post('/api/profile', (req, res) => {
     });
 });
 
-// Получение публичной информации о пользователе для модального окна профиля
+// Просмотр профиля
 app.get('/api/user/:username', (req, res) => {
     const target = req.params.username;
     const db = loadDB();
@@ -161,7 +160,6 @@ app.get('/api/data', (req, res) => {
     res.json({ chats: filteredChats, messages: db.messages, users: safeUsers });
 });
 
-// Обновление активности
 app.post('/api/activity', (req, res) => {
     const { username } = req.body;
     if (!username) return res.sendStatus(400);
@@ -176,7 +174,6 @@ app.post('/api/activity', (req, res) => {
     res.json({ success: true });
 });
 
-// Создание пространства
 app.post('/api/chats', (req, res) => {
     const { name, type, creator } = req.body;
     if (!name || !type || !creator) {

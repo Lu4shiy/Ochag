@@ -29,7 +29,6 @@
     <!-- Основной интерфейс мессенджера -->
     <div id="app-screen" class="screen hidden">
         <div class="sidebar">
-            <!-- Интерактивный профиль с выпадающим меню -->
             <div class="user-profile-container">
                 <div class="user-profile" id="user-profile-btn">
                     <div class="user-info">
@@ -39,7 +38,6 @@
                     <span class="dropdown-arrow">▾</span>
                 </div>
                 
-                <!-- Выпадающее меню -->
                 <div id="user-dropdown" class="dropdown-menu hidden">
                     <div class="dropdown-item" id="menu-profile">👤 Профиль</div>
                     <div class="dropdown-item" id="menu-create">➕ Создать</div>
@@ -112,13 +110,35 @@
                 </div>
 
                 <div class="input-group">
-                    <label class="modal-label">Дата рождения (например, 25 октября или 25.10.1995)</label>
-                    <input type="text" id="profile-birthdate-input" placeholder="ДД.ММ.ГГГГ или ДД.ММ">
+                    <label class="modal-label">Дата рождения</label>
+                    <div class="dob-selectors">
+                        <select id="dob-day">
+                            <option value="">День</option>
+                        </select>
+                        <select id="dob-month">
+                            <option value="">Месяц</option>
+                            <option value="1">Январь</option>
+                            <option value="2">Февраль</option>
+                            <option value="3">Март</option>
+                            <option value="4">Апрель</option>
+                            <option value="5">Май</option>
+                            <option value="6">Июнь</option>
+                            <option value="7">Июль</option>
+                            <option value="8">Август</option>
+                            <option value="9">Сентябрь</option>
+                            <option value="10">Октябрь</option>
+                            <option value="11">Ноябрь</option>
+                            <option value="12">Декабрь</option>
+                        </select>
+                        <select id="dob-year">
+                            <option value="">Год (необязательно)</option>
+                        </select>
+                    </div>
                 </div>
 
                 <p id="profile-error" class="error" style="display: none;"></p>
 
-                <div class="modal-buttons">
+                <div class="modal-buttons" style="margin-top: 10px;">
                     <button type="submit">Сохранить</button>
                     <button type="button" id="close-profile-modal-btn">Отмена</button>
                 </div>

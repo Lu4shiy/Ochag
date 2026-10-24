@@ -2,8 +2,9 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -23,27 +24,22 @@ body {
     display: none !important;
 }
 
-/* Плавные живые анимации */
+/* Безупречно плавные и быстрые анимации без фризов */
 button, .chat-item, .dropdown-item, .type-btn, .preset-item {
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 button:hover {
-    transform: scale(1.03);
+    transform: translateY(-1px);
 }
 
 button:active {
-    transform: scale(0.96);
+    transform: translateY(1px) scale(0.98);
 }
 
 .chat-item:hover {
-    transform: translateX(4px) scale(1.01);
     background-color: #35373c;
     color: #f2f3f5;
-}
-
-.chat-item:active {
-    transform: scale(0.98);
 }
 
 /* Авторизация */
@@ -59,7 +55,7 @@ button:active {
     border-radius: 12px;
     width: 380px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    animation: fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: fadeInScale 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .auth-card h2 {
@@ -77,7 +73,7 @@ button:active {
     border-radius: 6px;
     color: white;
     outline: none;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.15s ease;
 }
 
 .auth-card input:focus {
@@ -122,7 +118,7 @@ button:active {
     z-index: 2000;
     font-size: 14px;
     font-weight: 500;
-    animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: slideInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .toast.hidden {
@@ -165,7 +161,6 @@ button:active {
     color: #f2f3f5;
 }
 
-/* Стили аватарок (поддержка картинок и эмодзи/текста) */
 .user-avatar, .chat-item-avatar, .chat-header-avatar, .current-profile-avatar, .view-profile-avatar {
     width: 42px;
     height: 42px;
@@ -218,7 +213,7 @@ button:active {
     opacity: 0;
     transform: translateY(-8px);
     pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .dropdown-menu:not(.hidden) {
@@ -354,7 +349,7 @@ button:active {
     cursor: pointer;
     border-radius: 6px;
     padding: 4px 8px;
-    transition: background-color 0.2s;
+    transition: background-color 0.15s;
 }
 
 .clickable-header:hover {
@@ -386,7 +381,7 @@ button:active {
 
 .message {
     padding: 6px 0;
-    animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: fadeIn 0.2s ease;
 }
 
 .message-sender {
@@ -415,7 +410,7 @@ button:active {
     color: white;
     outline: none;
     font-size: 14px;
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow 0.15s ease;
 }
 
 .message-form input:focus {
@@ -456,7 +451,7 @@ button:active {
     z-index: 1000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.2s ease;
 }
 
 .modal:not(.hidden) {
@@ -468,13 +463,13 @@ button:active {
     background-color: #313338;
     padding: 25px;
     border-radius: 12px;
-    width: 400px;
+    width: 420px;
     display: flex;
     flex-direction: column;
     gap: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    transform: scale(0.95);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: scale(0.96);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal:not(.hidden) .modal-content {
@@ -495,19 +490,36 @@ button:active {
     margin-bottom: 6px;
     display: block;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.modal-content input {
+.modal-content input, .modal-content select {
     width: 100%;
-    padding: 10px;
+    padding: 10px 12px;
     background-color: #1e1f22;
     border: 1px solid #111214;
     border-radius: 6px;
     color: white;
     outline: none;
+    font-size: 14px;
 }
 
-/* Стили профиля в модалке */
+.modal-content select {
+    cursor: pointer;
+}
+
+/* Стили селекторов даты рождения */
+.dob-selectors {
+    display: flex;
+    gap: 8px;
+}
+
+.dob-selectors select {
+    flex: 1;
+}
+
+/* Стили профиля */
 .profile-avatar-section {
     display: flex;
     align-items: center;
@@ -525,7 +537,7 @@ button:active {
     font-size: 13px;
     font-weight: 600;
     display: inline-block;
-    transition: background-color 0.2s;
+    transition: background-color 0.15s;
 }
 
 .file-upload-btn:hover {
@@ -536,6 +548,8 @@ button:active {
     font-size: 12px;
     color: #949ba4;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .preset-avatars-grid {
@@ -550,7 +564,7 @@ button:active {
     border-radius: 8px;
     padding: 10px;
     text-align: center;
-    font-size: 20px;
+    font-size: 22px;
     cursor: pointer;
 }
 
