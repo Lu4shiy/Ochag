@@ -21,6 +21,11 @@
       "id": "community-1",
       "name": "Сообщество разработчиков",
       "type": "community"
+    },
+    {
+      "id": "chat-1792879385705",
+      "name": "333",
+      "type": "channel"
     }
   ],
   "messages": [

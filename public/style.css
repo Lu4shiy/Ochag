@@ -3,6 +3,7 @@
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 body {
@@ -32,9 +33,10 @@ body {
 .auth-card {
     background-color: #2b2d31;
     padding: 30px;
-    border-radius: 8px;
-    width: 350px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border-radius: 12px;
+    width: 380px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    animation: fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .auth-card h2 {
@@ -45,12 +47,17 @@ body {
 
 .auth-card input {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     margin-bottom: 12px;
     background-color: #1e1f22;
     border: 1px solid #111214;
-    border-radius: 4px;
+    border-radius: 6px;
     color: white;
+    outline: none;
+}
+
+.auth-card input:focus {
+    border-color: #5865f2;
 }
 
 .auth-buttons {
@@ -61,17 +68,22 @@ body {
 
 .auth-buttons button {
     flex: 1;
-    padding: 10px;
+    padding: 12px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
     background-color: #5865f2;
     color: white;
+    transition: background-color 0.2s, transform 0.1s;
 }
 
 .auth-buttons button:hover {
     background-color: #4752c4;
+}
+
+.auth-buttons button:active {
+    transform: scale(0.98);
 }
 
 .error {
@@ -90,22 +102,98 @@ body {
     border-right: 1px solid #1f2023;
 }
 
-.user-profile {
-    padding: 15px;
+/* Профиль и выпадающее меню */
+.user-profile-container {
+    position: relative;
     background-color: #232428;
+    border-bottom: 1px solid #1f2023;
+}
+
+.user-profile {
+    padding: 12px 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
 }
 
-.user-profile button {
-    padding: 5px 10px;
-    background-color: #4e5058;
-    border: none;
+.user-profile:hover {
+    background-color: #2b2d31;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    color: #f2f3f5;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: #5865f2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.dropdown-arrow {
+    color: #949ba4;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+/* Выпадающее меню с плавной анимацией */
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 10px;
+    right: 10px;
+    background-color: #111214;
+    border-radius: 8px;
+    padding: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    z-index: 100;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dropdown-menu:not(.hidden) {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.dropdown-item {
+    padding: 10px 12px;
     border-radius: 4px;
-    color: white;
     cursor: pointer;
+    font-size: 14px;
+    color: #dbdee1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-item:hover {
+    background-color: #5865f2;
+    color: white;
+}
+
+.dropdown-item.logout:hover {
+    background-color: #f23f43;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #2b2d31;
+    margin: 4px 0;
 }
 
 .nav-sections {
@@ -128,38 +216,23 @@ body {
 
 .chat-item {
     padding: 8px 10px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     margin-bottom: 4px;
     color: #949ba4;
     font-size: 14px;
 }
 
-.chat-item:hover, .chat-item.active {
+.chat-item:hover {
     background-color: #35373c;
     color: #f2f3f5;
+    transform: translateX(2px);
 }
 
-.create-chat-panel {
-    padding: 10px 15px;
-    background-color: #2b2d31;
-    border-top: 1px solid #1f2023;
-}
-
-.create-chat-panel button {
-    width: 100%;
-    padding: 8px;
-    background-color: #232428;
-    border: 1px dashed #4e5058;
-    border-radius: 4px;
-    color: #dbdee1;
-    cursor: pointer;
-    font-size: 13px;
-}
-
-.create-chat-panel button:hover {
-    background-color: #35373c;
-    border-color: #5865f2;
+.chat-item.active {
+    background-color: #404249;
+    color: #f2f3f5;
+    font-weight: 500;
 }
 
 .customization-slot {
@@ -198,6 +271,7 @@ body {
 
 .message {
     padding: 6px 0;
+    animation: fadeIn 0.2s ease;
 }
 
 .message-sender {
@@ -226,6 +300,10 @@ body {
     outline: none;
 }
 
+.message-form input:focus {
+    box-shadow: 0 0 0 2px #5865f2;
+}
+
 .message-form button {
     padding: 0 20px;
     background-color: #5865f2;
@@ -236,7 +314,11 @@ body {
     cursor: pointer;
 }
 
-/* Модальное окно */
+.message-form button:hover {
+    background-color: #4752c4;
+}
+
+/* Модальное окно с анимацией */
 .modal {
     position: fixed;
     top: 0;
@@ -247,16 +329,32 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.modal:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .modal-content {
     background-color: #313338;
     padding: 25px;
-    border-radius: 8px;
-    width: 350px;
+    border-radius: 12px;
+    width: 380px;
     display: flex;
     flex-direction: column;
     gap: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transform: scale(0.95);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal:not(.hidden) .modal-content {
+    transform: scale(1);
 }
 
 .modal-content h3 {
@@ -268,7 +366,7 @@ body {
     padding: 10px;
     background-color: #1e1f22;
     border: 1px solid #111214;
-    border-radius: 4px;
+    border-radius: 6px;
     color: white;
     outline: none;
 }
@@ -276,13 +374,14 @@ body {
 .modal-buttons {
     display: flex;
     gap: 10px;
+    margin-top: 5px;
 }
 
 .modal-buttons button {
     flex: 1;
     padding: 10px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
 }
@@ -292,7 +391,25 @@ body {
     color: white;
 }
 
+.modal-buttons button[type="submit"]:hover {
+    background-color: #4752c4;
+}
+
 .modal-buttons button[type="button"] {
     background-color: #4e5058;
     color: white;
+}
+
+.modal-buttons button[type="button"]:hover {
+    background-color: #6d6f78;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
 }

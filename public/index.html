@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мессенджер будущего (Шаг 2)</title>
+    <title>Мессенджер будущего</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -26,9 +26,23 @@
     <!-- Основной интерфейс мессенджера -->
     <div id="app-screen" class="screen hidden">
         <div class="sidebar">
-            <div class="user-profile">
-                <span id="current-username">User</span>
-                <button id="logout-btn">Выйти</button>
+            <!-- Интерактивный профиль с выпадающим меню -->
+            <div class="user-profile-container">
+                <div class="user-profile" id="user-profile-btn">
+                    <div class="user-info">
+                        <div class="user-avatar">💬</div>
+                        <span id="current-username">User</span>
+                    </div>
+                    <span class="dropdown-arrow">▾</span>
+                </div>
+                
+                <!-- Выпадающее меню -->
+                <div id="user-dropdown" class="dropdown-menu hidden">
+                    <div class="dropdown-item" id="menu-profile">👤 Профиль</div>
+                    <div class="dropdown-item" id="menu-create">➕ Создать</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item logout" id="menu-logout">🚪 Выйти</div>
+                </div>
             </div>
             
             <div class="nav-sections">
@@ -44,10 +58,6 @@
                     <h3>🌐 Сообщества</h3>
                     <div id="community-list" class="chat-category-list"></div>
                 </div>
-            </div>
-
-            <div class="create-chat-panel">
-                <button id="open-create-modal-btn">+ Создать пространство</button>
             </div>
 
             <div class="customization-slot">

@@ -12,9 +12,14 @@ const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const authError = document.getElementById('auth-error');
 const registerBtn = document.getElementById('register-btn');
-const logoutBtn = document.getElementById('logout-btn');
 
 const currentUsernameSpan = document.getElementById('current-username');
+const userProfileBtn = document.getElementById('user-profile-btn');
+const userDropdown = document.getElementById('user-dropdown');
+const menuProfile = document.getElementById('menu-profile');
+const menuCreate = document.getElementById('menu-create');
+const menuLogout = document.getElementById('menu-logout');
+
 const dmListDiv = document.getElementById('dm-list');
 const channelListDiv = document.getElementById('channel-list');
 const communityListDiv = document.getElementById('community-list');
@@ -25,7 +30,6 @@ const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
 
 const createModal = document.getElementById('create-modal');
-const openCreateModalBtn = document.getElementById('open-create-modal-btn');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const createChatForm = document.getElementById('create-chat-form');
 const newChatNameInput = document.getElementById('new-chat-name');
@@ -65,11 +69,34 @@ async function authenticate(url) {
     }
 }
 
-logoutBtn.addEventListener('click', () => {
+// Логика выпадающего меню профиля
+userProfileBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    userDropdown.classList.toggle('hidden');
+});
+
+// Закрытие меню при клике вне его
+document.addEventListener('click', () => {
+    userDropdown.classList.add('hidden');
+});
+
+// Пункты меню
+menuProfile.addEventListener('click', () => {
+    alert('Раздел профиля находится в разработке');
+    userDropdown.classList.add('hidden');
+});
+
+menuLogout.addEventListener('click', () => {
     currentUser = null;
     currentChatId = null;
+    userDropdown.classList.add('hidden');
     appScreen.classList.add('hidden');
     authScreen.classList.remove('hidden');
+});
+
+menuCreate.addEventListener('click', () => {
+    userDropdown.classList.add('hidden');
+    createModal.classList.remove('hidden');
 });
 
 async function initMessenger() {
@@ -147,11 +174,7 @@ messageForm.addEventListener('submit', (e) => {
     messageInput.value = '';
 });
 
-// Модальное окно
-openCreateModalBtn.addEventListener('click', () => {
-    createModal.classList.remove('hidden');
-});
-
+// Закрытие модального окна
 closeModalBtn.addEventListener('click', () => {
     createModal.classList.add('hidden');
 });
