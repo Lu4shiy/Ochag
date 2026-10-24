@@ -76,7 +76,7 @@ app.post('/api/login', (req, res) => {
     res.json({ success: true, user: { id: user.id, username: user.username } });
 });
 
-// Получение данных и списка пользователей для статусов
+// Получение данных
 app.get('/api/data', (req, res) => {
     const username = req.query.username;
     const db = loadDB();
@@ -91,13 +91,12 @@ app.get('/api/data', (req, res) => {
         return false;
     });
 
-    // Отдаем пользователей без паролей для статусов
     const safeUsers = db.users.map(u => ({ username: u.username, lastSeen: u.lastSeen }));
 
     res.json({ chats: filteredChats, messages: db.messages, users: safeUsers });
 });
 
-// Обновление времени активности (последнего захода)
+// Обновление активности
 app.post('/api/activity', (req, res) => {
     const { username } = req.body;
     if (!username) return res.sendStatus(400);
@@ -171,7 +170,11 @@ app.post('/api/chats', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    console.log('Пользователь подключился:', socket.id);
+    let connectedUser = null;
+
+    socket.on('set_user', (username) => {
+        connectedUser = username;
+    });
 
     socket.on('join_chat', (chatId) => {
         socket.join(chatId);
@@ -196,7 +199,15 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log('Пользователь отключился:', socket.id);
+        if (connectedUser) {
+            const db = loadDB();
+            const user = db.users.find(u => u.username === connectedUser);
+            if (user) {
+                user.lastSeen = new Date().toISOString();
+                saveDB(db);
+                io.emit('user_status_update', { username: connectedUser, lastSeen: user.lastSeen });
+            }
+        }
     });
 });
 

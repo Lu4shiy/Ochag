@@ -42,6 +42,22 @@ const modalTitle = document.getElementById('modal-title');
 const modalLabel = document.getElementById('modal-label');
 const modalError = document.getElementById('modal-error');
 const typeButtons = document.querySelectorAll('.type-btn');
+const appToast = document.getElementById('app-toast');
+const toastText = document.getElementById('toast-text');
+
+// Проверка сохраненной сессии при загрузке страницы
+window.addEventListener('DOMContentLoaded', () => {
+    const savedUser = localStorage.getItem('messenger_user');
+    if (savedUser) {
+        try {
+            currentUser = JSON.parse(savedUser);
+            socket.emit('set_user', currentUser.username);
+            initMessenger();
+        } catch (e) {
+            localStorage.removeItem('messenger_user');
+        }
+    }
+});
 
 // Авторизация
 authForm.addEventListener('submit', async (e) => {
@@ -68,6 +84,8 @@ async function authenticate(url) {
 
         if (data.success) {
             currentUser = data.user;
+            localStorage.setItem('messenger_user', JSON.stringify(currentUser));
+            socket.emit('set_user', currentUser.username);
             initMessenger();
         } else {
             authError.textContent = data.error;
@@ -77,7 +95,7 @@ async function authenticate(url) {
     }
 }
 
-// Отправка пинга активности каждые 30 секунд
+// Отправка пинга активности каждые 20 секунд
 setInterval(() => {
     if (currentUser) {
         fetch('/api/activity', {
@@ -86,7 +104,7 @@ setInterval(() => {
             body: JSON.stringify({ username: currentUser.username })
         }).catch(() => {});
     }
-}, 30000);
+}, 20000);
 
 userProfileBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -98,13 +116,14 @@ document.addEventListener('click', () => {
 });
 
 menuProfile.addEventListener('click', () => {
-    alert('Раздел профиля находится в разработке');
+    showToast('Раздел профиля находится в разработке');
     userDropdown.classList.add('hidden');
 });
 
 menuLogout.addEventListener('click', () => {
     currentUser = null;
     currentChatId = null;
+    localStorage.removeItem('messenger_user');
     userDropdown.classList.add('hidden');
     appScreen.classList.add('hidden');
     authScreen.classList.remove('hidden');
@@ -117,6 +136,14 @@ menuCreate.addEventListener('click', () => {
     newChatNameInput.value = '';
     createModal.classList.remove('hidden');
 });
+
+function showToast(text) {
+    toastText.textContent = text;
+    appToast.classList.remove('hidden');
+    setTimeout(() => {
+        appToast.classList.add('hidden');
+    }, 3000);
+}
 
 typeButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -151,7 +178,7 @@ async function initMessenger() {
     myAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
 
     await loadData();
-    if (allChats.length > 0) {
+    if (allChats.length > 0 && !currentChatId) {
         selectChat(allChats[0].id);
     }
 }
@@ -181,17 +208,15 @@ function renderChats() {
         const div = document.createElement('div');
         div.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
         
-        let displayName = chat.name;
-        if (chat.type === 'dm') {
-            // В личном чате имя чата хранится как имя собеседника
-            displayName = chat.name;
-        }
-
+        const displayName = chat.name;
         const initial = displayName.charAt(0).toUpperCase();
+
+        // Убран символ @ у личных чатов по вашему требованию
+        const prefix = chat.type === 'dm' ? '' : '# ';
 
         div.innerHTML = `
             <div class="chat-item-avatar">${initial}</div>
-            <div class="chat-item-name">${chat.type === 'dm' ? '@ ' : '# '}${displayName}</div>
+            <div class="chat-item-name">${prefix}${displayName}</div>
         `;
         
         div.onclick = () => selectChat(chat.id);
@@ -215,8 +240,9 @@ function formatLastSeen(isoString) {
     const diffMin = Math.floor(diffSec / 60);
     const diffHours = Math.floor(diffMin / 60);
 
-    if (diffSec < 45) {
-        return 'в сети (был(-а) прямо сейчас)';
+    // Статус "в сети" только если активность была менее 25 секунд назад
+    if (diffSec < 25) {
+        return 'в сети';
     } else if (diffMin >= 1 && diffMin < 60) {
         return `был(-а) ${diffMin} минут(-у) назад`;
     } else if (diffHours >= 1 && diffHours < 24 && date.getDate() === now.getDate()) {
@@ -236,7 +262,7 @@ function updateChatHeader() {
     if (!chat) return;
 
     if (chat.type === 'dm') {
-        activeChatTitle.textContent = `@ ${chat.name}`;
+        activeChatTitle.textContent = chat.name; // Без @
         activeAvatar.textContent = chat.name.charAt(0).toUpperCase();
         
         const targetUser = allUsers.find(u => u.username === chat.name);
@@ -244,7 +270,7 @@ function updateChatHeader() {
             activeChatStatus.textContent = formatLastSeen(targetUser.lastSeen);
             activeChatStatus.classList.remove('hidden');
         } else {
-            activeChatStatus.textContent = 'в сети';
+            activeChatStatus.textContent = 'не в сети';
             activeChatStatus.classList.remove('hidden');
         }
     } else {
