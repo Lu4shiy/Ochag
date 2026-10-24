@@ -32,7 +32,7 @@ function saveDB(data) {
 }
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
+app.use(express.json({ limit: '5mb' })); // Увеличиваем лимит для загрузки аватарок в base64
 
 // Регистрация
 app.post('/api/register', (req, res) => {
@@ -51,12 +51,15 @@ app.post('/api/register', (req, res) => {
         id: Date.now().toString(), 
         username, 
         password: hashedPassword, 
-        lastSeen: new Date().toISOString() 
+        lastSeen: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        avatar: null,
+        birthdate: ''
     };
     db.users.push(newUser);
     saveDB(db);
 
-    res.json({ success: true, user: { id: newUser.id, username: newUser.username } });
+    res.json({ success: true, user: { id: newUser.id, username: newUser.username, avatar: newUser.avatar, birthdate: newUser.birthdate, createdAt: newUser.createdAt } });
 });
 
 // Авторизация
@@ -73,7 +76,69 @@ app.post('/api/login', (req, res) => {
     user.lastSeen = new Date().toISOString();
     saveDB(db);
 
-    res.json({ success: true, user: { id: user.id, username: user.username } });
+    res.json({ success: true, user: { id: user.id, username: user.username, avatar: user.avatar || null, birthdate: user.birthdate || '', createdAt: user.createdAt || user.lastSeen } });
+});
+
+// Обновление профиля
+app.post('/api/profile', (req, res) => {
+    const { currentUsername, username, avatar, birthdate } = req.body;
+    const db = loadDB();
+    const user = db.users.find(u => u.username === currentUsername);
+    if (!user) {
+        return res.status(404).json({ success: false, error: 'Пользователь не найден' });
+    }
+
+    if (username && username !== currentUsername) {
+        if (db.users.find(u => u.username === username)) {
+            return res.status(400).json({ success: false, error: 'Это имя уже занято' });
+        }
+        user.username = username;
+        // Обновляем имя в личных чатах и сообщениях
+        db.chats.forEach(c => {
+            if (c.type === 'dm' && c.participants) {
+                const idx = c.participants.indexOf(currentUsername);
+                if (idx !== -1) c.participants[idx] = username;
+                if (c.name === currentUsername) c.name = username;
+            }
+        });
+        db.messages.forEach(m => {
+            if (m.sender === currentUsername) m.sender = username;
+        });
+    }
+
+    if (avatar !== undefined) user.avatar = avatar;
+    if (birthdate !== undefined) user.birthdate = birthdate;
+
+    saveDB(db);
+    res.json({ 
+        success: true, 
+        user: { 
+            id: user.id, 
+            username: user.username, 
+            avatar: user.avatar, 
+            birthdate: user.birthdate, 
+            createdAt: user.createdAt 
+        } 
+    });
+});
+
+// Получение публичной информации о пользователе для модального окна профиля
+app.get('/api/user/:username', (req, res) => {
+    const target = req.params.username;
+    const db = loadDB();
+    const user = db.users.find(u => u.username === target);
+    if (!user) {
+        return res.status(404).json({ success: false, error: 'Пользователь не найден' });
+    }
+    res.json({
+        success: true,
+        profile: {
+            username: user.username,
+            avatar: user.avatar || null,
+            birthdate: user.birthdate || null,
+            createdAt: user.createdAt || user.lastSeen
+        }
+    });
 });
 
 // Получение данных
@@ -91,7 +156,7 @@ app.get('/api/data', (req, res) => {
         return false;
     });
 
-    const safeUsers = db.users.map(u => ({ username: u.username, lastSeen: u.lastSeen }));
+    const safeUsers = db.users.map(u => ({ username: u.username, lastSeen: u.lastSeen, avatar: u.avatar }));
 
     res.json({ chats: filteredChats, messages: db.messages, users: safeUsers });
 });

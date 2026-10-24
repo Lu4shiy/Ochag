@@ -24,6 +24,7 @@ const menuLogout = document.getElementById('menu-logout');
 
 const chatsListDiv = document.getElementById('chats-list');
 
+const activeChatHeaderInfo = document.getElementById('active-chat-header-info');
 const activeChatTitle = document.getElementById('active-chat-title');
 const activeChatStatus = document.getElementById('active-chat-status');
 const activeAvatar = document.getElementById('active-avatar');
@@ -31,6 +32,7 @@ const messagesContainer = document.getElementById('messages-container');
 const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
 
+// Модалка создания
 const createModal = document.getElementById('create-modal');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const createChatForm = document.getElementById('create-chat-form');
@@ -40,10 +42,32 @@ const modalTitle = document.getElementById('modal-title');
 const modalLabel = document.getElementById('modal-label');
 const modalError = document.getElementById('modal-error');
 const typeButtons = document.querySelectorAll('.type-btn');
+
+// Модалка профиля
+const profileModal = document.getElementById('profile-modal');
+const closeProfileModalBtn = document.getElementById('close-profile-modal-btn');
+const profileForm = document.getElementById('profile-form');
+const profileUsernameInput = document.getElementById('profile-username-input');
+const profileBirthdateInput = document.getElementById('profile-birthdate-input');
+const profilePreviewAvatar = document.getElementById('profile-preview-avatar');
+const customAvatarInput = document.getElementById('custom-avatar-input');
+const presetItems = document.querySelectorAll('.preset-item');
+const profileError = document.getElementById('profile-error');
+
+// Модалка просмотра чужого профиля
+const userInfoModal = document.getElementById('user-info-modal');
+const closeUserInfoBtn = document.getElementById('close-user-info-btn');
+const viewUserAvatar = document.getElementById('view-user-avatar');
+const viewUserName = document.getElementById('view-user-name');
+const viewUserCreated = document.getElementById('view-user-created');
+const viewUserBirth = document.getElementById('view-user-birth');
+
 const appToast = document.getElementById('app-toast');
 const toastText = document.getElementById('toast-text');
 
-// Проверка сохраненной сессии при загрузке страницы
+let editingAvatarValue = null;
+
+// Проверка сессии
 window.addEventListener('DOMContentLoaded', () => {
     const savedUser = localStorage.getItem('messenger_user');
     if (savedUser) {
@@ -57,7 +81,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Авторизация
 authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     authenticate('/api/login');
@@ -93,7 +116,7 @@ async function authenticate(url) {
     }
 }
 
-// Отправка пинга активности каждые 20 секунд
+// Активность
 setInterval(() => {
     if (currentUser) {
         fetch('/api/activity', {
@@ -113,9 +136,93 @@ document.addEventListener('click', () => {
     userDropdown.classList.add('hidden');
 });
 
+// Открытие модалки профиля
 menuProfile.addEventListener('click', () => {
-    showToast('Раздел профиля находится в разработке');
     userDropdown.classList.add('hidden');
+    profileError.style.display = 'none';
+    profileUsernameInput.value = currentUser.username;
+    profileBirthdateInput.value = currentUser.birthdate || '';
+    editingAvatarValue = currentUser.avatar || null;
+    renderProfilePreview();
+    profileModal.classList.remove('hidden');
+});
+
+closeProfileModalBtn.addEventListener('click', () => {
+    profileModal.classList.add('hidden');
+});
+
+// Выбор пресета аватара
+presetItems.forEach(item => {
+    item.addEventListener('click', () => {
+        presetItems.forEach(i => i.classList.remove('selected'));
+        item.classList.add('selected');
+        editingAvatarValue = item.getAttribute('data-val');
+        renderProfilePreview();
+    });
+});
+
+// Загрузка кастомной аватароки
+customAvatarInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(uploadEvent) {
+        editingAvatarValue = uploadEvent.target.result; // base64
+        presetItems.forEach(i => i.classList.remove('selected'));
+        renderProfilePreview();
+    };
+    reader.readAsDataURL(file);
+});
+
+function renderProfilePreview() {
+    profilePreviewAvatar.innerHTML = '';
+    if (!editingAvatarValue) {
+        profilePreviewAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
+    } else if (editingAvatarValue.startsWith('data:') || editingAvatarValue.startsWith('http')) {
+        const img = document.createElement('img');
+        img.src = editingAvatarValue;
+        profilePreviewAvatar.appendChild(img);
+    } else {
+        profilePreviewAvatar.textContent = editingAvatarValue;
+    }
+}
+
+// Сохранение профиля
+profileForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    profileError.style.display = 'none';
+
+    const newUsername = profileUsernameInput.value.trim();
+    const newBirthdate = profileBirthdateInput.value.trim();
+
+    try {
+        const response = await fetch('/api/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                currentUsername: currentUser.username,
+                username: newUsername,
+                avatar: editingAvatarValue,
+                birthdate: newBirthdate
+            })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            currentUser = data.user;
+            localStorage.setItem('messenger_user', JSON.stringify(currentUser));
+            socket.emit('set_user', currentUser.username);
+            profileModal.classList.add('hidden');
+            showToast('Профиль успешно обновлен');
+            await loadData();
+        } else {
+            profileError.textContent = data.error;
+            profileError.style.display = 'block';
+        }
+    } catch (err) {
+        profileError.textContent = 'Ошибка соединения с сервером';
+        profileError.style.display = 'block';
+    }
 });
 
 menuLogout.addEventListener('click', () => {
@@ -173,11 +280,24 @@ async function initMessenger() {
     authScreen.classList.add('hidden');
     appScreen.classList.remove('hidden');
     currentUsernameSpan.textContent = currentUser.username;
-    myAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
+    renderUserAvatar(myAvatar, currentUser);
 
     await loadData();
     if (allChats.length > 0 && !currentChatId) {
         selectChat(allChats[0].id);
+    }
+}
+
+function renderUserAvatar(container, userObj) {
+    container.innerHTML = '';
+    if (!userObj || !userObj.avatar) {
+        container.textContent = (userObj && userObj.username ? userObj.username.charAt(0) : 'U').toUpperCase();
+    } else if (userObj.avatar.startsWith('data:') || userObj.avatar.startsWith('http')) {
+        const img = document.createElement('img');
+        img.src = userObj.avatar;
+        container.appendChild(img);
+    } else {
+        container.textContent = userObj.avatar;
     }
 }
 
@@ -192,19 +312,18 @@ async function loadData() {
         if (currentChatId) {
             updateChatHeader();
         }
+        renderUserAvatar(myAvatar, currentUser);
     } catch (err) {
         console.error('Ошибка загрузки данных');
     }
 }
 
-// Вспомогательная функция для получения последнего сообщения в чате
 function getLastMessage(chatId) {
     const chatMsgs = allMessages.filter(m => m.chatId === chatId);
     if (chatMsgs.length === 0) return null;
     return chatMsgs[chatMsgs.length - 1];
 }
 
-// Форматирование времени для списка чатов
 function formatMessageTime(isoString) {
     if (!isoString) return '';
     const date = new Date(isoString);
@@ -225,7 +344,6 @@ function formatMessageTime(isoString) {
 function renderChats() {
     chatsListDiv.innerHTML = '';
 
-    // Сортируем все чаты по дате последнего сообщения (самые новые сверху)
     const sortedChats = [...allChats].sort((a, b) => {
         const lastA = getLastMessage(a.id);
         const lastB = getLastMessage(b.id);
@@ -239,22 +357,31 @@ function renderChats() {
         div.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
         
         const displayName = chat.name;
-        const initial = displayName.charAt(0).toUpperCase();
+        let chatUser = null;
+        if (chat.type === 'dm') {
+            chatUser = allUsers.find(u => u.username === displayName);
+        }
 
         const lastMsg = getLastMessage(chat.id);
         const lastMsgText = lastMsg ? `${lastMsg.sender}: ${lastMsg.text}` : '';
         const lastMsgTime = lastMsg ? formatMessageTime(lastMsg.timestamp) : '';
 
-        div.innerHTML = `
-            <div class="chat-item-avatar">${initial}</div>
-            <div class="chat-item-content">
-                <div class="chat-item-header">
-                    <span class="chat-item-name">${displayName}</span>
-                    <span class="chat-item-time">${lastMsgTime}</span>
-                </div>
-                <div class="chat-item-last-msg">${lastMsgText}</div>
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'chat-item-avatar';
+        renderUserAvatar(avatarDiv, chatUser || { username: displayName });
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'chat-item-content';
+        contentDiv.innerHTML = `
+            <div class="chat-item-header">
+                <span class="chat-item-name">${displayName}</span>
+                <span class="chat-item-time">${lastMsgTime}</span>
             </div>
+            <div class="chat-item-last-msg">${lastMsgText}</div>
         `;
+
+        div.appendChild(avatarDiv);
+        div.appendChild(contentDiv);
         
         div.onclick = () => selectChat(chat.id);
         chatsListDiv.appendChild(div);
@@ -292,9 +419,9 @@ function updateChatHeader() {
 
     if (chat.type === 'dm') {
         activeChatTitle.textContent = chat.name;
-        activeAvatar.textContent = chat.name.charAt(0).toUpperCase();
-        
         const targetUser = allUsers.find(u => u.username === chat.name);
+        renderUserAvatar(activeAvatar, targetUser || { username: chat.name });
+
         if (targetUser && targetUser.lastSeen) {
             activeChatStatus.textContent = formatLastSeen(targetUser.lastSeen);
             activeChatStatus.classList.remove('hidden');
@@ -303,11 +430,39 @@ function updateChatHeader() {
             activeChatStatus.classList.remove('hidden');
         }
     } else {
-        activeChatTitle.textContent = chat.name; // Без решетки (#)
-        activeAvatar.textContent = chat.name.charAt(0).toUpperCase();
+        activeChatTitle.textContent = chat.name;
+        renderUserAvatar(activeAvatar, { username: chat.name });
         activeChatStatus.classList.add('hidden');
     }
 }
+
+// Клик по шапке личного чата для просмотра профиля собеседника
+activeChatHeaderInfo.onclick = async () => {
+    const chat = allChats.find(c => c.id === currentChatId);
+    if (!chat || chat.type !== 'dm') return;
+
+    try {
+        const response = await fetch(`/api/user/${encodeURIComponent(chat.name)}`);
+        const data = await response.json();
+        if (data.success) {
+            const p = data.profile;
+            renderUserAvatar(viewUserAvatar, p);
+            viewUserName.textContent = p.username;
+            
+            const regDate = p.createdAt ? new Date(p.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Не указана';
+            viewUserCreated.textContent = regDate;
+            viewUserBirth.textContent = p.birthdate ? p.birthdate : 'Не указана';
+
+            userInfoModal.classList.remove('hidden');
+        }
+    } catch (err) {
+        showToast('Не удалось загрузить профиль пользователя');
+    }
+};
+
+closeUserInfoBtn.onclick = () => {
+    userInfoModal.classList.add('hidden');
+};
 
 function selectChat(chatId) {
     currentChatId = chatId;
@@ -413,7 +568,7 @@ socket.on('user_status_update', (data) => {
 
 socket.on('new_message', (message) => {
     allMessages.push(message);
-    renderChats(); // Перерисовываем список, чтобы чат поднялся наверх из-за нового сообщения
+    renderChats();
     if (message.chatId === currentChatId) {
         renderMessages();
     }

@@ -23,8 +23,8 @@ body {
     display: none !important;
 }
 
-/* Плавные и живые пружинистые анимации */
-button, .chat-item, .dropdown-item, .type-btn {
+/* Плавные живые анимации */
+button, .chat-item, .dropdown-item, .type-btn, .preset-item {
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
@@ -108,7 +108,7 @@ button:active {
     text-align: center;
 }
 
-/* Кастомное приложение-уведомление */
+/* Уведомление */
 .toast {
     position: fixed;
     bottom: 25px;
@@ -129,7 +129,7 @@ button:active {
     display: none;
 }
 
-/* Главный интерфейс */
+/* Сайдбар */
 .sidebar {
     width: 340px;
     background-color: #2b2d31;
@@ -138,7 +138,6 @@ button:active {
     border-right: 1px solid #1f2023;
 }
 
-/* Профиль и меню */
 .user-profile-container {
     position: relative;
     background-color: #232428;
@@ -166,7 +165,8 @@ button:active {
     color: #f2f3f5;
 }
 
-.user-avatar, .chat-item-avatar, .chat-header-avatar {
+/* Стили аватарок (поддержка картинок и эмодзи/текста) */
+.user-avatar, .chat-item-avatar, .chat-header-avatar, .current-profile-avatar, .view-profile-avatar {
     width: 42px;
     height: 42px;
     background-color: #5865f2;
@@ -174,11 +174,29 @@ button:active {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: bold;
     color: white;
     flex-shrink: 0;
     text-transform: uppercase;
+    overflow: hidden;
+    object-fit: cover;
+}
+
+.current-profile-avatar, .view-profile-avatar {
+    width: 72px;
+    height: 72px;
+    font-size: 28px;
+}
+
+.view-profile-avatar {
+    margin: 0 auto;
+}
+
+.user-avatar img, .chat-item-avatar img, .chat-header-avatar img, .current-profile-avatar img, .view-profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .dropdown-arrow {
@@ -187,7 +205,6 @@ button:active {
     transition: transform 0.2s ease;
 }
 
-/* Выпадающее меню */
 .dropdown-menu {
     position: absolute;
     top: calc(100% + 6px);
@@ -248,7 +265,6 @@ button:active {
     gap: 4px;
 }
 
-/* Стили элемента единого списка чатов с превью сообщения и временем */
 .chat-item {
     display: flex;
     align-items: center;
@@ -311,6 +327,7 @@ button:active {
     border-top: 1px solid #1f2023;
 }
 
+/* Область чата */
 .chat-area {
     flex: 1;
     display: flex;
@@ -331,6 +348,17 @@ button:active {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.clickable-header {
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 4px 8px;
+    transition: background-color 0.2s;
+}
+
+.clickable-header:hover {
+    background-color: #35373c;
 }
 
 .chat-header-text h3 {
@@ -394,7 +422,6 @@ button:active {
     box-shadow: 0 0 0 2px #5865f2;
 }
 
-/* Круглая кнопка отправки сообщения */
 .send-btn {
     width: 44px;
     height: 44px;
@@ -408,14 +435,14 @@ button:active {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    padding-left: 2px; /* центрирование иконки стрелочки */
+    padding-left: 2px;
 }
 
 .send-btn:hover {
     background-color: #4752c4;
 }
 
-/* Модальное окно */
+/* Модальные окна */
 .modal {
     position: fixed;
     top: 0;
@@ -458,6 +485,10 @@ button:active {
     color: #f2f3f5;
 }
 
+.text-center {
+    text-align: center;
+}
+
 .modal-label {
     font-size: 12px;
     color: #949ba4;
@@ -474,6 +505,70 @@ button:active {
     border-radius: 6px;
     color: white;
     outline: none;
+}
+
+/* Стили профиля в модалке */
+.profile-avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+.file-upload-btn {
+    background-color: #4e5058;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+    transition: background-color 0.2s;
+}
+
+.file-upload-btn:hover {
+    background-color: #6d6f78;
+}
+
+.preset-avatars-label {
+    font-size: 12px;
+    color: #949ba4;
+    font-weight: 600;
+}
+
+.preset-avatars-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.preset-item {
+    background-color: #1e1f22;
+    border: 1px solid #111214;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.preset-item:hover, .preset-item.selected {
+    background-color: #5865f2;
+    border-color: #5865f2;
+}
+
+.view-profile-details {
+    margin-top: 15px;
+    background-color: #1e1f22;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .type-selector {

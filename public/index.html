@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мессенджер будущего</title>
-    <!-- Подключаем чистый кастомный шрифт Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -49,7 +48,6 @@
                 </div>
             </div>
             
-            <!-- Единый список всех чатов, отсортированных по свежим сообщениям -->
             <div class="nav-sections">
                 <div id="chats-list" class="chats-list-container"></div>
             </div>
@@ -61,7 +59,7 @@
 
         <div class="chat-area">
             <div class="chat-header">
-                <div id="active-chat-header-info" class="chat-header-info">
+                <div id="active-chat-header-info" class="chat-header-info clickable-header" title="Посмотреть профиль">
                     <div class="chat-header-avatar" id="active-avatar">#</div>
                     <div class="chat-header-text">
                         <h3 id="active-chat-title">Выберите чат</h3>
@@ -77,9 +75,70 @@
         </div>
     </div>
 
-    <!-- Кастомное встроенное уведомление -->
+    <!-- Уведомление -->
     <div id="app-toast" class="toast hidden">
         <span id="toast-text"></span>
+    </div>
+
+    <!-- Модальное окно редактирования профиля -->
+    <div id="profile-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Редактирование профиля</h3>
+            <form id="profile-form">
+                <div class="profile-avatar-section">
+                    <div class="current-profile-avatar" id="profile-preview-avatar">U</div>
+                    <div class="profile-avatar-controls">
+                        <label class="file-upload-btn">
+                            📂 Загрузить свою
+                            <input type="file" id="custom-avatar-input" accept="image/*" hidden>
+                        </label>
+                    </div>
+                </div>
+                <div class="preset-avatars-label">Или выберите иконку:</div>
+                <div class="preset-avatars-grid" id="preset-avatars">
+                    <div class="preset-item" data-val="🦁">🦁</div>
+                    <div class="preset-item" data-val="🦊">🦊</div>
+                    <div class="preset-item" data-val="🐼">🐼</div>
+                    <div class="preset-item" data-val="🐨">🐨</div>
+                    <div class="preset-item" data-val="🐰">🐰</div>
+                    <div class="preset-item" data-val="🐱">🐱</div>
+                    <div class="preset-item" data-val="🐶">🐶</div>
+                    <div class="preset-item" data-val="🚀">🚀</div>
+                </div>
+
+                <div class="input-group" style="margin-top: 15px;">
+                    <label class="modal-label">Никнейм</label>
+                    <input type="text" id="profile-username-input" required>
+                </div>
+
+                <div class="input-group">
+                    <label class="modal-label">Дата рождения (например, 25 октября или 25.10.1995)</label>
+                    <input type="text" id="profile-birthdate-input" placeholder="ДД.ММ.ГГГГ или ДД.ММ">
+                </div>
+
+                <p id="profile-error" class="error" style="display: none;"></p>
+
+                <div class="modal-buttons">
+                    <button type="submit">Сохранить</button>
+                    <button type="button" id="close-profile-modal-btn">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно просмотра профиля собеседника -->
+    <div id="user-info-modal" class="modal hidden">
+        <div class="modal-content text-center">
+            <div class="view-profile-avatar" id="view-user-avatar">U</div>
+            <h3 id="view-user-name" style="margin-top: 10px;">Имя</h3>
+            <div class="view-profile-details">
+                <p><strong>Дата регистрации:</strong> <span id="view-user-created">-</span></p>
+                <p><strong>Дата рождения:</strong> <span id="view-user-birth">-</span></p>
+            </div>
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button type="button" id="close-user-info-btn">Закрыть</button>
+            </div>
+        </div>
     </div>
 
     <!-- Модальное окно создания пространства -->
@@ -92,7 +151,6 @@
                     <input type="text" id="new-chat-name" placeholder="Введите имя..." required>
                 </div>
 
-                <!-- Кастомный переключатель типов -->
                 <div class="type-selector">
                     <button type="button" class="type-btn active" data-type="dm">Личный чат</button>
                     <button type="button" class="type-btn" data-type="channel">Канал</button>
