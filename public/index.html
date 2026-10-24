@@ -80,14 +80,23 @@
     <!-- Модальное окно создания пространства -->
     <div id="create-modal" class="modal hidden">
         <div class="modal-content">
-            <h3>Создать новое пространство</h3>
+            <h3 id="modal-title">Создать личный чат</h3>
             <form id="create-chat-form">
-                <input type="text" id="new-chat-name" placeholder="Название..." required>
-                <select id="new-chat-type">
-                    <option value="dm">Личный чат (DM)</option>
-                    <option value="channel">Канал</option>
-                    <option value="community">Сообщество</option>
-                </select>
+                <div class="input-group">
+                    <label id="modal-label" class="modal-label">Имя пользователя собеседника</label>
+                    <input type="text" id="new-chat-name" placeholder="Введите имя..." required>
+                </div>
+
+                <!-- Кастомный переключатель вместо системного select -->
+                <div class="type-selector">
+                    <button type="button" class="type-btn active" data-type="dm">Личный чат</button>
+                    <button type="button" class="type-btn" data-type="channel">Канал</button>
+                    <button type="button" class="type-btn" data-type="community">Сообщество</button>
+                </div>
+                <input type="hidden" id="new-chat-type" value="dm">
+
+                <p id="modal-error" class="error" style="display: none; margin-top: 5px;"></p>
+
                 <div class="modal-buttons">
                     <button type="submit">Создать</button>
                     <button type="button" id="close-modal-btn">Отмена</button>

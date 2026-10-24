@@ -3,7 +3,6 @@
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 body {
@@ -21,6 +20,29 @@ body {
 
 .hidden {
     display: none !important;
+}
+
+/* Пружинистые и плавные анимации для всех кнопок и интерактивных элементов */
+button, .chat-item, .dropdown-item, .type-btn {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+    transform: scale(1.04);
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+.chat-item:hover {
+    transform: translateX(4px) scale(1.02);
+    background-color: #35373c;
+    color: #f2f3f5;
+}
+
+.chat-item:active {
+    transform: scale(0.98);
 }
 
 /* Авторизация */
@@ -75,15 +97,6 @@ body {
     font-weight: bold;
     background-color: #5865f2;
     color: white;
-    transition: background-color 0.2s, transform 0.1s;
-}
-
-.auth-buttons button:hover {
-    background-color: #4752c4;
-}
-
-.auth-buttons button:active {
-    transform: scale(0.98);
 }
 
 .error {
@@ -144,10 +157,9 @@ body {
 .dropdown-arrow {
     color: #949ba4;
     font-size: 12px;
-    transition: transform 0.2s ease;
 }
 
-/* Выпадающее меню с плавной анимацией */
+/* Выпадающее меню */
 .dropdown-menu {
     position: absolute;
     top: calc(100% + 6px);
@@ -223,12 +235,6 @@ body {
     font-size: 14px;
 }
 
-.chat-item:hover {
-    background-color: #35373c;
-    color: #f2f3f5;
-    transform: translateX(2px);
-}
-
 .chat-item.active {
     background-color: #404249;
     color: #f2f3f5;
@@ -300,10 +306,6 @@ body {
     outline: none;
 }
 
-.message-form input:focus {
-    box-shadow: 0 0 0 2px #5865f2;
-}
-
 .message-form button {
     padding: 0 20px;
     background-color: #5865f2;
@@ -314,11 +316,7 @@ body {
     cursor: pointer;
 }
 
-.message-form button:hover {
-    background-color: #4752c4;
-}
-
-/* Модальное окно с анимацией */
+/* Модальное окно */
 .modal {
     position: fixed;
     top: 0;
@@ -344,7 +342,7 @@ body {
     background-color: #313338;
     padding: 25px;
     border-radius: 12px;
-    width: 380px;
+    width: 400px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -361,7 +359,15 @@ body {
     color: #f2f3f5;
 }
 
-.modal-content input, .modal-content select {
+.modal-label {
+    font-size: 12px;
+    color: #949ba4;
+    margin-bottom: 6px;
+    display: block;
+    font-weight: 600;
+}
+
+.modal-content input {
     width: 100%;
     padding: 10px;
     background-color: #1e1f22;
@@ -369,6 +375,38 @@ body {
     border-radius: 6px;
     color: white;
     outline: none;
+}
+
+/* Кастомный селектор типов вместо системного select */
+.type-selector {
+    display: flex;
+    gap: 6px;
+    background-color: #1e1f22;
+    padding: 4px;
+    border-radius: 6px;
+    border: 1px solid #111214;
+}
+
+.type-btn {
+    flex: 1;
+    padding: 8px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #949ba4;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.type-btn:hover {
+    color: #dbdee1;
+}
+
+.type-btn.active {
+    background-color: #5865f2;
+    color: white;
+    box-shadow: 0 2px 8px rgba(88, 101, 242, 0.4);
 }
 
 .modal-buttons {
@@ -391,17 +429,9 @@ body {
     color: white;
 }
 
-.modal-buttons button[type="submit"]:hover {
-    background-color: #4752c4;
-}
-
 .modal-buttons button[type="button"] {
     background-color: #4e5058;
     color: white;
-}
-
-.modal-buttons button[type="button"]:hover {
-    background-color: #6d6f78;
 }
 
 @keyframes fadeIn {

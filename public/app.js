@@ -33,7 +33,11 @@ const createModal = document.getElementById('create-modal');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const createChatForm = document.getElementById('create-chat-form');
 const newChatNameInput = document.getElementById('new-chat-name');
-const newChatTypeSelect = document.getElementById('new-chat-type');
+const newChatTypeInput = document.getElementById('new-chat-type');
+const modalTitle = document.getElementById('modal-title');
+const modalLabel = document.getElementById('modal-label');
+const modalError = document.getElementById('modal-error');
+const typeButtons = document.querySelectorAll('.type-btn');
 
 // Авторизация
 authForm.addEventListener('submit', async (e) => {
@@ -75,12 +79,10 @@ userProfileBtn.addEventListener('click', (e) => {
     userDropdown.classList.toggle('hidden');
 });
 
-// Закрытие меню при клике вне его
 document.addEventListener('click', () => {
     userDropdown.classList.add('hidden');
 });
 
-// Пункты меню
 menuProfile.addEventListener('click', () => {
     alert('Раздел профиля находится в разработке');
     userDropdown.classList.add('hidden');
@@ -96,7 +98,37 @@ menuLogout.addEventListener('click', () => {
 
 menuCreate.addEventListener('click', () => {
     userDropdown.classList.add('hidden');
+    modalError.style.display = 'none';
+    modalError.textContent = '';
+    newChatNameInput.value = '';
     createModal.classList.remove('hidden');
+});
+
+// Управление кастомным переключателем типов в модалке
+typeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        typeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const type = btn.getAttribute('data-type');
+        newChatTypeInput.value = type;
+
+        modalError.style.display = 'none';
+        modalError.textContent = '';
+
+        if (type === 'dm') {
+            modalTitle.textContent = 'Создать личный чат';
+            modalLabel.textContent = 'Имя пользователя собеседника';
+            newChatNameInput.placeholder = 'Введите имя пользователя...';
+        } else if (type === 'channel') {
+            modalTitle.textContent = 'Создать канал';
+            modalLabel.textContent = 'Название канала';
+            newChatNameInput.placeholder = 'Введите название канала...';
+        } else if (type === 'community') {
+            modalTitle.textContent = 'Создать сообщество';
+            modalLabel.textContent = 'Название сообщества';
+            newChatNameInput.placeholder = 'Введите название сообщества...';
+        }
+    });
 });
 
 async function initMessenger() {
@@ -104,7 +136,8 @@ async function initMessenger() {
     appScreen.classList.remove('hidden');
     currentUsernameSpan.textContent = currentUser.username;
 
-    const response = await fetch('/api/data');
+    // Загружаем данные с передачей имени текущего пользователя для фильтрации личных чатов
+    const response = await fetch(`/api/data?username=${encodeURIComponent(currentUser.username)}`);
     const data = await response.json();
     allChats = data.chats;
     allMessages = data.messages;
@@ -174,15 +207,17 @@ messageForm.addEventListener('submit', (e) => {
     messageInput.value = '';
 });
 
-// Закрытие модального окна
 closeModalBtn.addEventListener('click', () => {
     createModal.classList.add('hidden');
 });
 
 createChatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    modalError.style.display = 'none';
+    modalError.textContent = '';
+
     const name = newChatNameInput.value.trim();
-    const type = newChatTypeSelect.value;
+    const type = newChatTypeInput.value;
 
     if (!name) return;
 
@@ -190,22 +225,38 @@ createChatForm.addEventListener('submit', async (e) => {
         const response = await fetch('/api/chats', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, type })
+            body: JSON.stringify({ name, type, creator: currentUser.username })
         });
         const data = await response.json();
 
         if (data.success) {
             newChatNameInput.value = '';
             createModal.classList.add('hidden');
+        } else {
+            modalError.textContent = data.error;
+            modalError.style.display = 'block';
         }
     } catch (err) {
-        console.error('Ошибка создания пространства');
+        modalError.textContent = 'Ошибка соединения с сервером';
+        modalError.style.display = 'block';
     }
 });
 
 socket.on('new_chat', (chat) => {
-    allChats.push(chat);
-    renderChats();
+    // Для личных чатов добавляем только если пользователь является участником
+    if (chat.type === 'dm') {
+        if (chat.participants && chat.participants.includes(currentUser.username)) {
+            if (!allChats.some(c => c.id === chat.id)) {
+                allChats.push(chat);
+                renderChats();
+            }
+        }
+    } else {
+        if (!allChats.some(c => c.id === chat.id)) {
+            allChats.push(chat);
+            renderChats();
+        }
+    }
 });
 
 socket.on('new_message', (message) => {

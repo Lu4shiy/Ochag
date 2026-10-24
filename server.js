@@ -18,8 +18,7 @@ function loadDB() {
             users: [],
             chats: [
                 { id: 'general-channel', name: 'Общий канал', type: 'channel' },
-                { id: 'community-1', name: 'Сообщество разработчиков', type: 'community' },
-                { id: 'dm-support', name: 'Служба поддержки', type: 'dm' }
+                { id: 'community-1', name: 'Сообщество разработчиков', type: 'community' }
             ],
             messages: []
         };
@@ -69,31 +68,81 @@ app.post('/api/login', (req, res) => {
     res.json({ success: true, user: { id: user.id, username: user.username } });
 });
 
-// Получение данных
+// Получение данных с фильтрацией личных чатов для конкретного пользователя
 app.get('/api/data', (req, res) => {
+    const username = req.query.username;
     const db = loadDB();
-    res.json({ chats: db.chats, messages: db.messages });
+
+    const filteredChats = db.chats.filter(chat => {
+        if (chat.type === 'channel' || chat.type === 'community') {
+            return true; // Каналы и сообщества видны всем
+        }
+        if (chat.type === 'dm') {
+            return chat.participants && chat.participants.includes(username);
+        }
+        return false;
+    });
+
+    res.json({ chats: filteredChats, messages: db.messages });
 });
 
 // Создание нового пространства (чата, канала или сообщества)
 app.post('/api/chats', (req, res) => {
-    const { name, type } = req.body;
-    if (!name || !type) {
-        return res.status(400).json({ success: false, error: 'Укажите название и тип' });
+    const { name, type, creator } = req.body;
+    if (!name || !type || !creator) {
+        return res.status(400).json({ success: false, error: 'Заполните все поля' });
     }
 
     const db = loadDB();
-    const newChat = {
-        id: 'chat-' + Date.now(),
-        name,
-        type // 'dm', 'channel', 'community'
-    };
 
-    db.chats.push(newChat);
-    saveDB(db);
+    if (type === 'dm') {
+        const targetUser = name.trim();
+        if (targetUser === creator) {
+            return res.status(400).json({ success: false, error: 'Нельзя создать чат с самим собой' });
+        }
 
-    io.emit('new_chat', newChat);
-    res.json({ success: true, chat: newChat });
+        const userExists = db.users.find(u => u.username === targetUser);
+        if (!userExists) {
+            return res.status(400).json({ success: false, error: 'Пользователь с таким именем не найден' });
+        }
+
+        // Проверяем, существует ли уже такой личный чат
+        const existingDm = db.chats.find(c => 
+            c.type === 'dm' && 
+            c.participants && 
+            c.participants.includes(creator) && 
+            c.participants.includes(targetUser)
+        );
+
+        if (existingDm) {
+            return res.json({ success: true, chat: existingDm });
+        }
+
+        const newChat = {
+            id: 'chat-' + Date.now(),
+            name: targetUser,
+            type: 'dm',
+            participants: [creator, targetUser]
+        };
+
+        db.chats.push(newChat);
+        saveDB(db);
+
+        io.emit('new_chat', newChat);
+        return res.json({ success: true, chat: newChat });
+    } else {
+        const newChat = {
+            id: 'chat-' + Date.now(),
+            name: name.trim(),
+            type
+        };
+
+        db.chats.push(newChat);
+        saveDB(db);
+
+        io.emit('new_chat', newChat);
+        return res.json({ success: true, chat: newChat });
+    }
 });
 
 // WebSocket логика
