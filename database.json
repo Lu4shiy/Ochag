@@ -9,6 +9,11 @@
       "id": "1792879211035",
       "username": "2",
       "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+    },
+    {
+      "id": "1792880024558",
+      "username": "3",
+      "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
     }
   ],
   "chats": [
@@ -31,6 +36,15 @@
       "id": "chat-1792879654825",
       "name": "1",
       "type": "dm"
+    },
+    {
+      "id": "chat-1792880008568",
+      "name": "2",
+      "type": "dm",
+      "participants": [
+        "1",
+        "2"
+      ]
     }
   ],
   "messages": [
@@ -54,6 +68,13 @@
       "sender": "1",
       "text": "5",
       "timestamp": "2026-10-24T22:07:39.413Z"
+    },
+    {
+      "id": "1792880013095",
+      "chatId": "chat-1792880008568",
+      "sender": "1",
+      "text": "ку",
+      "timestamp": "2026-10-24T22:13:33.095Z"
     }
   ]
 }

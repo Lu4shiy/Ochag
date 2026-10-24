@@ -4,6 +4,7 @@ let currentUser = null;
 let currentChatId = null;
 let allChats = [];
 let allMessages = [];
+let allUsers = [];
 
 const authScreen = document.getElementById('auth-screen');
 const appScreen = document.getElementById('app-screen');
@@ -14,6 +15,7 @@ const authError = document.getElementById('auth-error');
 const registerBtn = document.getElementById('register-btn');
 
 const currentUsernameSpan = document.getElementById('current-username');
+const myAvatar = document.getElementById('my-avatar');
 const userProfileBtn = document.getElementById('user-profile-btn');
 const userDropdown = document.getElementById('user-dropdown');
 const menuProfile = document.getElementById('menu-profile');
@@ -25,6 +27,8 @@ const channelListDiv = document.getElementById('channel-list');
 const communityListDiv = document.getElementById('community-list');
 
 const activeChatTitle = document.getElementById('active-chat-title');
+const activeChatStatus = document.getElementById('active-chat-status');
+const activeAvatar = document.getElementById('active-avatar');
 const messagesContainer = document.getElementById('messages-container');
 const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
@@ -73,7 +77,17 @@ async function authenticate(url) {
     }
 }
 
-// Логика выпадающего меню профиля
+// Отправка пинга активности каждые 30 секунд
+setInterval(() => {
+    if (currentUser) {
+        fetch('/api/activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUser.username })
+        }).catch(() => {});
+    }
+}, 30000);
+
 userProfileBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     userDropdown.classList.toggle('hidden');
@@ -104,7 +118,6 @@ menuCreate.addEventListener('click', () => {
     createModal.classList.remove('hidden');
 });
 
-// Управление кастомным переключателем типов в модалке
 typeButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         typeButtons.forEach(b => b.classList.remove('active'));
@@ -135,16 +148,27 @@ async function initMessenger() {
     authScreen.classList.add('hidden');
     appScreen.classList.remove('hidden');
     currentUsernameSpan.textContent = currentUser.username;
+    myAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
 
-    // Загружаем данные с передачей имени текущего пользователя для фильтрации личных чатов
-    const response = await fetch(`/api/data?username=${encodeURIComponent(currentUser.username)}`);
-    const data = await response.json();
-    allChats = data.chats;
-    allMessages = data.messages;
-
-    renderChats();
+    await loadData();
     if (allChats.length > 0) {
         selectChat(allChats[0].id);
+    }
+}
+
+async function loadData() {
+    try {
+        const response = await fetch(`/api/data?username=${encodeURIComponent(currentUser.username)}`);
+        const data = await response.json();
+        allChats = data.chats;
+        allMessages = data.messages;
+        allUsers = data.users || [];
+        renderChats();
+        if (currentChatId) {
+            updateChatHeader();
+        }
+    } catch (err) {
+        console.error('Ошибка загрузки данных');
     }
 }
 
@@ -156,7 +180,20 @@ function renderChats() {
     allChats.forEach(chat => {
         const div = document.createElement('div');
         div.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
-        div.textContent = chat.type === 'dm' ? `@ ${chat.name}` : `# ${chat.name}`;
+        
+        let displayName = chat.name;
+        if (chat.type === 'dm') {
+            // В личном чате имя чата хранится как имя собеседника
+            displayName = chat.name;
+        }
+
+        const initial = displayName.charAt(0).toUpperCase();
+
+        div.innerHTML = `
+            <div class="chat-item-avatar">${initial}</div>
+            <div class="chat-item-name">${chat.type === 'dm' ? '@ ' : '# '}${displayName}</div>
+        `;
+        
         div.onclick = () => selectChat(chat.id);
 
         if (chat.type === 'dm') {
@@ -169,10 +206,57 @@ function renderChats() {
     });
 }
 
+function formatLastSeen(isoString) {
+    if (!isoString) return 'был(-а) недавно';
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHours = Math.floor(diffMin / 60);
+
+    if (diffSec < 45) {
+        return 'в сети (был(-а) прямо сейчас)';
+    } else if (diffMin >= 1 && diffMin < 60) {
+        return `был(-а) ${diffMin} минут(-у) назад`;
+    } else if (diffHours >= 1 && diffHours < 24 && date.getDate() === now.getDate()) {
+        return `был(-а) ${diffHours} час(-а) назад`;
+    } else {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(-2);
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `был(-а) ${day}.${month}.${year} ${hours}:${minutes}`;
+    }
+}
+
+function updateChatHeader() {
+    const chat = allChats.find(c => c.id === currentChatId);
+    if (!chat) return;
+
+    if (chat.type === 'dm') {
+        activeChatTitle.textContent = `@ ${chat.name}`;
+        activeAvatar.textContent = chat.name.charAt(0).toUpperCase();
+        
+        const targetUser = allUsers.find(u => u.username === chat.name);
+        if (targetUser && targetUser.lastSeen) {
+            activeChatStatus.textContent = formatLastSeen(targetUser.lastSeen);
+            activeChatStatus.classList.remove('hidden');
+        } else {
+            activeChatStatus.textContent = 'в сети';
+            activeChatStatus.classList.remove('hidden');
+        }
+    } else {
+        activeChatTitle.textContent = `# ${chat.name}`;
+        activeAvatar.textContent = chat.name.charAt(0).toUpperCase();
+        activeChatStatus.classList.add('hidden');
+    }
+}
+
 function selectChat(chatId) {
     currentChatId = chatId;
-    const chat = allChats.find(c => c.id === chatId);
-    activeChatTitle.textContent = chat ? (chat.type === 'dm' ? `@ ${chat.name}` : `# ${chat.name}`) : 'Чат';
+    updateChatHeader();
     
     socket.emit('join_chat', chatId);
     renderMessages();
@@ -232,6 +316,8 @@ createChatForm.addEventListener('submit', async (e) => {
         if (data.success) {
             newChatNameInput.value = '';
             createModal.classList.add('hidden');
+            await loadData();
+            selectChat(data.chat.id);
         } else {
             modalError.textContent = data.error;
             modalError.style.display = 'block';
@@ -243,7 +329,6 @@ createChatForm.addEventListener('submit', async (e) => {
 });
 
 socket.on('new_chat', (chat) => {
-    // Для личных чатов добавляем только если пользователь является участником
     if (chat.type === 'dm') {
         if (chat.participants && chat.participants.includes(currentUser.username)) {
             if (!allChats.some(c => c.id === chat.id)) {
@@ -256,6 +341,18 @@ socket.on('new_chat', (chat) => {
             allChats.push(chat);
             renderChats();
         }
+    }
+});
+
+socket.on('user_status_update', (data) => {
+    const user = allUsers.find(u => u.username === data.username);
+    if (user) {
+        user.lastSeen = data.lastSeen;
+    } else {
+        allUsers.push(data);
+    }
+    if (currentChatId) {
+        updateChatHeader();
     }
 });
 

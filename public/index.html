@@ -30,7 +30,7 @@
             <div class="user-profile-container">
                 <div class="user-profile" id="user-profile-btn">
                     <div class="user-info">
-                        <div class="user-avatar">💬</div>
+                        <div class="user-avatar" id="my-avatar">U</div>
                         <span id="current-username">User</span>
                     </div>
                     <span class="dropdown-arrow">▾</span>
@@ -67,7 +67,13 @@
 
         <div class="chat-area">
             <div class="chat-header">
-                <h3 id="active-chat-title">Выберите чат</h3>
+                <div id="active-chat-header-info" class="chat-header-info">
+                    <div class="chat-header-avatar" id="active-avatar">#</div>
+                    <div class="chat-header-text">
+                        <h3 id="active-chat-title">Выберите чат</h3>
+                        <span id="active-chat-status" class="chat-status hidden"></span>
+                    </div>
+                </div>
             </div>
             <div id="messages-container" class="messages-container"></div>
             <form id="message-form" class="message-form hidden">
@@ -87,7 +93,7 @@
                     <input type="text" id="new-chat-name" placeholder="Введите имя..." required>
                 </div>
 
-                <!-- Кастомный переключатель вместо системного select -->
+                <!-- Кастомный переключатель типов -->
                 <div class="type-selector">
                     <button type="button" class="type-btn active" data-type="dm">Личный чат</button>
                     <button type="button" class="type-btn" data-type="channel">Канал</button>

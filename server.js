@@ -47,7 +47,12 @@ app.post('/api/register', (req, res) => {
     }
 
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
-    const newUser = { id: Date.now().toString(), username, password: hashedPassword };
+    const newUser = { 
+        id: Date.now().toString(), 
+        username, 
+        password: hashedPassword, 
+        lastSeen: new Date().toISOString() 
+    };
     db.users.push(newUser);
     saveDB(db);
 
@@ -65,17 +70,20 @@ app.post('/api/login', (req, res) => {
         return res.status(400).json({ success: false, error: 'Неверный логин или пароль' });
     }
 
+    user.lastSeen = new Date().toISOString();
+    saveDB(db);
+
     res.json({ success: true, user: { id: user.id, username: user.username } });
 });
 
-// Получение данных с фильтрацией личных чатов для конкретного пользователя
+// Получение данных и списка пользователей для статусов
 app.get('/api/data', (req, res) => {
     const username = req.query.username;
     const db = loadDB();
 
     const filteredChats = db.chats.filter(chat => {
         if (chat.type === 'channel' || chat.type === 'community') {
-            return true; // Каналы и сообщества видны всем
+            return true;
         }
         if (chat.type === 'dm') {
             return chat.participants && chat.participants.includes(username);
@@ -83,10 +91,28 @@ app.get('/api/data', (req, res) => {
         return false;
     });
 
-    res.json({ chats: filteredChats, messages: db.messages });
+    // Отдаем пользователей без паролей для статусов
+    const safeUsers = db.users.map(u => ({ username: u.username, lastSeen: u.lastSeen }));
+
+    res.json({ chats: filteredChats, messages: db.messages, users: safeUsers });
 });
 
-// Создание нового пространства (чата, канала или сообщества)
+// Обновление времени активности (последнего захода)
+app.post('/api/activity', (req, res) => {
+    const { username } = req.body;
+    if (!username) return res.sendStatus(400);
+
+    const db = loadDB();
+    const user = db.users.find(u => u.username === username);
+    if (user) {
+        user.lastSeen = new Date().toISOString();
+        saveDB(db);
+        io.emit('user_status_update', { username, lastSeen: user.lastSeen });
+    }
+    res.json({ success: true });
+});
+
+// Создание пространства
 app.post('/api/chats', (req, res) => {
     const { name, type, creator } = req.body;
     if (!name || !type || !creator) {
@@ -106,7 +132,6 @@ app.post('/api/chats', (req, res) => {
             return res.status(400).json({ success: false, error: 'Пользователь с таким именем не найден' });
         }
 
-        // Проверяем, существует ли уже такой личный чат
         const existingDm = db.chats.find(c => 
             c.type === 'dm' && 
             c.participants && 
@@ -145,7 +170,6 @@ app.post('/api/chats', (req, res) => {
     }
 });
 
-// WebSocket логика
 io.on('connection', (socket) => {
     console.log('Пользователь подключился:', socket.id);
 
