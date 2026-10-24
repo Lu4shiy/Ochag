@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мессенджер будущего (MVP)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Окно авторизации / регистрации -->
+    <div id="auth-screen" class="screen">
+        <div class="auth-card">
+            <h2>Вход в мессенджер</h2>
+            <form id="auth-form">
+                <input type="text" id="username" placeholder="Имя пользователя" required>
+                <input type="password" id="password" placeholder="Пароль" required>
+                <div class="auth-buttons">
+                    <button type="submit" id="login-btn">Войти</button>
+                    <button type="button" id="register-btn">Зарегистрироваться</button>
+                </div>
+                <p id="auth-error" class="error"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Основной интерфейс мессенджера -->
+    <div id="app-screen" class="screen hidden">
+        <div class="sidebar">
+            <div class="user-profile">
+                <span id="current-username">User</span>
+                <button id="logout-btn">Выйти</button>
+            </div>
+            
+            <div class="nav-sections">
+                <h3>Разделы</h3>
+                <div id="chats-list">
+                    <!-- Сюда динамически загружаются личные чаты, каналы и сообщества -->
+                </div>
+            </div>
+
+            <!-- Задел под будущую кастомизацию интерфейса и ботов -->
+            <div class="customization-slot">
+                <span>🎨 Слот кастомизации</span>
+            </div>
+        </div>
+
+        <div class="chat-area">
+            <div class="chat-header">
+                <h3 id="active-chat-title">Выберите чат</h3>
+            </div>
+            <div id="messages-container" class="messages-container">
+                <!-- История сообщений -->
+            </div>
+            <form id="message-form" class="message-form hidden">
+                <input type="text" id="message-input" placeholder="Введите сообщение..." autocomplete="off" required>
+                <button type="submit">Отправить</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
