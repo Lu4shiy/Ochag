@@ -15,11 +15,21 @@ const registerBtn = document.getElementById('register-btn');
 const logoutBtn = document.getElementById('logout-btn');
 
 const currentUsernameSpan = document.getElementById('current-username');
-const chatsListDiv = document.getElementById('chats-list');
+const dmListDiv = document.getElementById('dm-list');
+const channelListDiv = document.getElementById('channel-list');
+const communityListDiv = document.getElementById('community-list');
+
 const activeChatTitle = document.getElementById('active-chat-title');
 const messagesContainer = document.getElementById('messages-container');
 const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
+
+const createModal = document.getElementById('create-modal');
+const openCreateModalBtn = document.getElementById('open-create-modal-btn');
+const closeModalBtn = document.getElementById('close-modal-btn');
+const createChatForm = document.getElementById('create-chat-form');
+const newChatNameInput = document.getElementById('new-chat-name');
+const newChatTypeSelect = document.getElementById('new-chat-type');
 
 // Авторизация
 authForm.addEventListener('submit', async (e) => {
@@ -79,20 +89,30 @@ async function initMessenger() {
 }
 
 function renderChats() {
-    chatsListDiv.innerHTML = '';
+    dmListDiv.innerHTML = '';
+    channelListDiv.innerHTML = '';
+    communityListDiv.innerHTML = '';
+
     allChats.forEach(chat => {
         const div = document.createElement('div');
         div.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
-        div.textContent = `# ${chat.name}`;
+        div.textContent = chat.type === 'dm' ? `@ ${chat.name}` : `# ${chat.name}`;
         div.onclick = () => selectChat(chat.id);
-        chatsListDiv.appendChild(div);
+
+        if (chat.type === 'dm') {
+            dmListDiv.appendChild(div);
+        } else if (chat.type === 'channel') {
+            channelListDiv.appendChild(div);
+        } else if (chat.type === 'community') {
+            communityListDiv.appendChild(div);
+        }
     });
 }
 
 function selectChat(chatId) {
     currentChatId = chatId;
     const chat = allChats.find(c => c.id === chatId);
-    activeChatTitle.textContent = chat ? `# ${chat.name}` : 'Чат';
+    activeChatTitle.textContent = chat ? (chat.type === 'dm' ? `@ ${chat.name}` : `# ${chat.name}`) : 'Чат';
     
     socket.emit('join_chat', chatId);
     renderMessages();
@@ -125,6 +145,44 @@ messageForm.addEventListener('submit', (e) => {
     });
 
     messageInput.value = '';
+});
+
+// Модальное окно
+openCreateModalBtn.addEventListener('click', () => {
+    createModal.classList.remove('hidden');
+});
+
+closeModalBtn.addEventListener('click', () => {
+    createModal.classList.add('hidden');
+});
+
+createChatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = newChatNameInput.value.trim();
+    const type = newChatTypeSelect.value;
+
+    if (!name) return;
+
+    try {
+        const response = await fetch('/api/chats', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, type })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            newChatNameInput.value = '';
+            createModal.classList.add('hidden');
+        }
+    } catch (err) {
+        console.error('Ошибка создания пространства');
+    }
+});
+
+socket.on('new_chat', (chat) => {
+    allChats.push(chat);
+    renderChats();
 });
 
 socket.on('new_message', (message) => {

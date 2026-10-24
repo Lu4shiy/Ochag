@@ -114,11 +114,16 @@ body {
     overflow-y: auto;
 }
 
-.nav-sections h3 {
-    font-size: 12px;
+.section-group {
+    margin-bottom: 15px;
+}
+
+.section-group h3 {
+    font-size: 11px;
     text-transform: uppercase;
     color: #949ba4;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
 }
 
 .chat-item {
@@ -127,11 +132,34 @@ body {
     cursor: pointer;
     margin-bottom: 4px;
     color: #949ba4;
+    font-size: 14px;
 }
 
 .chat-item:hover, .chat-item.active {
     background-color: #35373c;
     color: #f2f3f5;
+}
+
+.create-chat-panel {
+    padding: 10px 15px;
+    background-color: #2b2d31;
+    border-top: 1px solid #1f2023;
+}
+
+.create-chat-panel button {
+    width: 100%;
+    padding: 8px;
+    background-color: #232428;
+    border: 1px dashed #4e5058;
+    border-radius: 4px;
+    color: #dbdee1;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.create-chat-panel button:hover {
+    background-color: #35373c;
+    border-color: #5865f2;
 }
 
 .customization-slot {
@@ -206,4 +234,65 @@ body {
     color: white;
     font-weight: bold;
     cursor: pointer;
+}
+
+/* Модальное окно */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #313338;
+    padding: 25px;
+    border-radius: 8px;
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-content h3 {
+    color: #f2f3f5;
+}
+
+.modal-content input, .modal-content select {
+    width: 100%;
+    padding: 10px;
+    background-color: #1e1f22;
+    border: 1px solid #111214;
+    border-radius: 4px;
+    color: white;
+    outline: none;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-buttons button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.modal-buttons button[type="submit"] {
+    background-color: #5865f2;
+    color: white;
+}
+
+.modal-buttons button[type="button"] {
+    background-color: #4e5058;
+    color: white;
 }

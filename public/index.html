@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мессенджер будущего (MVP)</title>
+    <title>Мессенджер будущего (Шаг 2)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -32,13 +32,24 @@
             </div>
             
             <div class="nav-sections">
-                <h3>Разделы</h3>
-                <div id="chats-list">
-                    <!-- Сюда динамически загружаются личные чаты, каналы и сообщества -->
+                <div class="section-group">
+                    <h3>💬 Личные чаты</h3>
+                    <div id="dm-list" class="chat-category-list"></div>
+                </div>
+                <div class="section-group">
+                    <h3>📢 Каналы</h3>
+                    <div id="channel-list" class="chat-category-list"></div>
+                </div>
+                <div class="section-group">
+                    <h3>🌐 Сообщества</h3>
+                    <div id="community-list" class="chat-category-list"></div>
                 </div>
             </div>
 
-            <!-- Задел под будущую кастомизацию интерфейса и ботов -->
+            <div class="create-chat-panel">
+                <button id="open-create-modal-btn">+ Создать пространство</button>
+            </div>
+
             <div class="customization-slot">
                 <span>🎨 Слот кастомизации</span>
             </div>
@@ -48,12 +59,29 @@
             <div class="chat-header">
                 <h3 id="active-chat-title">Выберите чат</h3>
             </div>
-            <div id="messages-container" class="messages-container">
-                <!-- История сообщений -->
-            </div>
+            <div id="messages-container" class="messages-container"></div>
             <form id="message-form" class="message-form hidden">
                 <input type="text" id="message-input" placeholder="Введите сообщение..." autocomplete="off" required>
                 <button type="submit">Отправить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания пространства -->
+    <div id="create-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Создать новое пространство</h3>
+            <form id="create-chat-form">
+                <input type="text" id="new-chat-name" placeholder="Название..." required>
+                <select id="new-chat-type">
+                    <option value="dm">Личный чат (DM)</option>
+                    <option value="channel">Канал</option>
+                    <option value="community">Сообщество</option>
+                </select>
+                <div class="modal-buttons">
+                    <button type="submit">Создать</button>
+                    <button type="button" id="close-modal-btn">Отмена</button>
+                </div>
             </form>
         </div>
     </div>

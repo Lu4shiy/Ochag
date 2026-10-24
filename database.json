@@ -1,0 +1,42 @@
+{
+  "users": [
+    {
+      "id": "1792879185330",
+      "username": "1",
+      "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+    },
+    {
+      "id": "1792879211035",
+      "username": "2",
+      "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+    }
+  ],
+  "chats": [
+    {
+      "id": "general-channel",
+      "name": "Общий канал",
+      "type": "channel"
+    },
+    {
+      "id": "community-1",
+      "name": "Сообщество разработчиков",
+      "type": "community"
+    }
+  ],
+  "messages": [
+    {
+      "id": "1792879196374",
+      "chatId": "general-channel",
+      "sender": "1",
+      "text": "iuuu",
+      "timestamp": "2026-10-24T21:59:56.374Z"
+    },
+    {
+      "id": "1792879214303",
+      "chatId": "general-channel",
+      "sender": "2",
+      "text": "iii",
+      "timestamp": "2026-10-24T22:00:14.303Z"
+    }
+  ]
+}

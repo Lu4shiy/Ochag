@@ -12,14 +12,14 @@ const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'database.json');
 
-// Инициализация базы данных (в виде JSON файла для простоты работы на MVP)
 function loadDB() {
     if (!fs.existsSync(DB_FILE)) {
         const initialData = {
             users: [],
             chats: [
                 { id: 'general-channel', name: 'Общий канал', type: 'channel' },
-                { id: 'community-1', name: 'Сообщество разработчиков', type: 'community' }
+                { id: 'community-1', name: 'Сообщество разработчиков', type: 'community' },
+                { id: 'dm-support', name: 'Служба поддержки', type: 'dm' }
             ],
             messages: []
         };
@@ -69,13 +69,34 @@ app.post('/api/login', (req, res) => {
     res.json({ success: true, user: { id: user.id, username: user.username } });
 });
 
-// Получение списка чатов и сообщений
+// Получение данных
 app.get('/api/data', (req, res) => {
     const db = loadDB();
     res.json({ chats: db.chats, messages: db.messages });
 });
 
-// WebSocket логика реального времени
+// Создание нового пространства (чата, канала или сообщества)
+app.post('/api/chats', (req, res) => {
+    const { name, type } = req.body;
+    if (!name || !type) {
+        return res.status(400).json({ success: false, error: 'Укажите название и тип' });
+    }
+
+    const db = loadDB();
+    const newChat = {
+        id: 'chat-' + Date.now(),
+        name,
+        type // 'dm', 'channel', 'community'
+    };
+
+    db.chats.push(newChat);
+    saveDB(db);
+
+    io.emit('new_chat', newChat);
+    res.json({ success: true, chat: newChat });
+});
+
+// WebSocket логика
 io.on('connection', (socket) => {
     console.log('Пользователь подключился:', socket.id);
 
