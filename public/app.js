@@ -22,9 +22,7 @@ const menuProfile = document.getElementById('menu-profile');
 const menuCreate = document.getElementById('menu-create');
 const menuLogout = document.getElementById('menu-logout');
 
-const dmListDiv = document.getElementById('dm-list');
-const channelListDiv = document.getElementById('channel-list');
-const communityListDiv = document.getElementById('community-list');
+const chatsListDiv = document.getElementById('chats-list');
 
 const activeChatTitle = document.getElementById('active-chat-title');
 const activeChatStatus = document.getElementById('active-chat-status');
@@ -199,35 +197,67 @@ async function loadData() {
     }
 }
 
-function renderChats() {
-    dmListDiv.innerHTML = '';
-    channelListDiv.innerHTML = '';
-    communityListDiv.innerHTML = '';
+// Вспомогательная функция для получения последнего сообщения в чате
+function getLastMessage(chatId) {
+    const chatMsgs = allMessages.filter(m => m.chatId === chatId);
+    if (chatMsgs.length === 0) return null;
+    return chatMsgs[chatMsgs.length - 1];
+}
 
-    allChats.forEach(chat => {
+// Форматирование времени для списка чатов
+function formatMessageTime(isoString) {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    const now = new Date();
+    
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    if (date.toDateString() === now.toDateString()) {
+        return `${hours}:${minutes}`;
+    } else {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        return `${day}.${month}`;
+    }
+}
+
+function renderChats() {
+    chatsListDiv.innerHTML = '';
+
+    // Сортируем все чаты по дате последнего сообщения (самые новые сверху)
+    const sortedChats = [...allChats].sort((a, b) => {
+        const lastA = getLastMessage(a.id);
+        const lastB = getLastMessage(b.id);
+        const timeA = lastA ? new Date(lastA.timestamp).getTime() : 0;
+        const timeB = lastB ? new Date(lastB.timestamp).getTime() : 0;
+        return timeB - timeA;
+    });
+
+    sortedChats.forEach(chat => {
         const div = document.createElement('div');
         div.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
         
         const displayName = chat.name;
         const initial = displayName.charAt(0).toUpperCase();
 
-        // Убран символ @ у личных чатов по вашему требованию
-        const prefix = chat.type === 'dm' ? '' : '# ';
+        const lastMsg = getLastMessage(chat.id);
+        const lastMsgText = lastMsg ? `${lastMsg.sender}: ${lastMsg.text}` : '';
+        const lastMsgTime = lastMsg ? formatMessageTime(lastMsg.timestamp) : '';
 
         div.innerHTML = `
             <div class="chat-item-avatar">${initial}</div>
-            <div class="chat-item-name">${prefix}${displayName}</div>
+            <div class="chat-item-content">
+                <div class="chat-item-header">
+                    <span class="chat-item-name">${displayName}</span>
+                    <span class="chat-item-time">${lastMsgTime}</span>
+                </div>
+                <div class="chat-item-last-msg">${lastMsgText}</div>
+            </div>
         `;
         
         div.onclick = () => selectChat(chat.id);
-
-        if (chat.type === 'dm') {
-            dmListDiv.appendChild(div);
-        } else if (chat.type === 'channel') {
-            channelListDiv.appendChild(div);
-        } else if (chat.type === 'community') {
-            communityListDiv.appendChild(div);
-        }
+        chatsListDiv.appendChild(div);
     });
 }
 
@@ -240,7 +270,6 @@ function formatLastSeen(isoString) {
     const diffMin = Math.floor(diffSec / 60);
     const diffHours = Math.floor(diffMin / 60);
 
-    // Статус "в сети" только если активность была менее 25 секунд назад
     if (diffSec < 25) {
         return 'в сети';
     } else if (diffMin >= 1 && diffMin < 60) {
@@ -262,7 +291,7 @@ function updateChatHeader() {
     if (!chat) return;
 
     if (chat.type === 'dm') {
-        activeChatTitle.textContent = chat.name; // Без @
+        activeChatTitle.textContent = chat.name;
         activeAvatar.textContent = chat.name.charAt(0).toUpperCase();
         
         const targetUser = allUsers.find(u => u.username === chat.name);
@@ -274,7 +303,7 @@ function updateChatHeader() {
             activeChatStatus.classList.remove('hidden');
         }
     } else {
-        activeChatTitle.textContent = `# ${chat.name}`;
+        activeChatTitle.textContent = chat.name; // Без решетки (#)
         activeAvatar.textContent = chat.name.charAt(0).toUpperCase();
         activeChatStatus.classList.add('hidden');
     }
@@ -384,6 +413,7 @@ socket.on('user_status_update', (data) => {
 
 socket.on('new_message', (message) => {
     allMessages.push(message);
+    renderChats(); // Перерисовываем список, чтобы чат поднялся наверх из-за нового сообщения
     if (message.chatId === currentChatId) {
         renderMessages();
     }

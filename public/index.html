@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мессенджер будущего</title>
+    <!-- Подключаем чистый кастомный шрифт Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -45,19 +49,9 @@
                 </div>
             </div>
             
+            <!-- Единый список всех чатов, отсортированных по свежим сообщениям -->
             <div class="nav-sections">
-                <div class="section-group">
-                    <h3>💬 Личные чаты</h3>
-                    <div id="dm-list" class="chat-category-list"></div>
-                </div>
-                <div class="section-group">
-                    <h3>📢 Каналы</h3>
-                    <div id="channel-list" class="chat-category-list"></div>
-                </div>
-                <div class="section-group">
-                    <h3>🌐 Сообщества</h3>
-                    <div id="community-list" class="chat-category-list"></div>
-                </div>
+                <div id="chats-list" class="chats-list-container"></div>
             </div>
 
             <div class="customization-slot">
@@ -78,12 +72,12 @@
             <div id="messages-container" class="messages-container"></div>
             <form id="message-form" class="message-form hidden">
                 <input type="text" id="message-input" placeholder="Введите сообщение..." autocomplete="off" required>
-                <button type="submit">Отправить</button>
+                <button type="submit" class="send-btn" title="Отправить">➤</button>
             </form>
         </div>
     </div>
 
-    <!-- Кастомное встроенное уведомление вместо стандартного alert -->
+    <!-- Кастомное встроенное уведомление -->
     <div id="app-toast" class="toast hidden">
         <span id="toast-text"></span>
     </div>
